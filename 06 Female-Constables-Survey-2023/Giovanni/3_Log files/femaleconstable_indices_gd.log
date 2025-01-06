@@ -1,0 +1,55 @@
+-----------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\USER\Desktop\Dropbox\Debiasing Police in In
+> dia\005-Data-and-analysis-2022\06 Female-Constables-Survey-2023
+> \Giovanni\3_Log files\femaleconstable_indices_gd.log
+  log type:  text
+ opened on:   6 Dec 2024, 16:26:21
+
+. 
+. * We will add this line from time to time if the program takes 
+> time to compute or uses a lot of loops
+. noisily display as text "The date is " as result "--$S_DATE--" 
+> as text " and the time is " as result "--$S_TIME--"
+The date is -- 6 Dec 2024-- and the time is --16:26:21--
+
+. 
+. ****************************INDEX CONSTRUCTION*****************
+> *****************
+. 
+. * Load data
+. 
+. use "$clean_dta/female_constables_clean.dta", clear
+
+. 
+end of do-file
+
+. tab count_treated_officers_network
+
+Num treated |
+ in network |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |      1,561       86.24       86.24
+          1 |        183       10.11       96.35
+          2 |         45        2.49       98.84
+          3 |         19        1.05       99.89
+          4 |          1        0.06       99.94
+          5 |          1        0.06      100.00
+------------+-----------------------------------
+      Total |      1,810      100.00
+
+. tab count_treated_officers_network if treatment==1
+
+Num treated |
+ in network |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |        682       73.25       73.25
+          1 |        183       19.66       92.91
+          2 |         45        4.83       97.74
+          3 |         19        2.04       99.79
+          4 |          1        0.11       99.89
+          5 |          1        0.11      100.00
+------------+-----------------------------------
+      Total |        931      100.00
+
+. exit, clear

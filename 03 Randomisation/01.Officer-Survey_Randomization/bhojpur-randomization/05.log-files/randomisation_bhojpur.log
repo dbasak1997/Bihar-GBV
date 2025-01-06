@@ -1,0 +1,129 @@
+-------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03 Randomisati
+> on\01.Officer-Survey_Randomization\bhojpur-randomization\05.log-files\randomisation_bhojpur.log
+  log type:  text
+ opened on:  26 Jun 2024, 17:29:55
+
+. 
+. * We will add this line from time to time if the program takes time to compute or uses a lot of loops
+. noisily display as text "The date is " as result "--$S_DATE--" as text " and the time is " as result 
+> "--$S_TIME
+The date is --26 Jun 2024-- and the time is --17:29:55
+
+. 
+. 
+. **Preparing the Dataset 
+. 
+. * Loading the merged baseline for Bhojpur
+. use "$source\1003_bhojpur-merged.dta"
+
+. 
+. tab po_grandtotal, missing // No missing values
+
+      Total |
+   Officers |
+Strength in |
+     the PS |
+    (Strata |
+  Variable) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          9 |          4        1.49        1.49
+         10 |          9        3.35        4.83
+         11 |          3        1.12        5.95
+         12 |         11        4.09       10.04
+         13 |         11        4.09       14.13
+         14 |         10        3.72       17.84
+         15 |          4        1.49       19.33
+         16 |         10        3.72       23.05
+         17 |         14        5.20       28.25
+         18 |          7        2.60       30.86
+         19 |         26        9.67       40.52
+         21 |          5        1.86       42.38
+         23 |         12        4.46       46.84
+         24 |         30       11.15       57.99
+         25 |         22        8.18       66.17
+         26 |         11        4.09       70.26
+         34 |         43       15.99       86.25
+         36 |         12        4.46       90.71
+         50 |         10        3.72       94.42
+         92 |         15        5.58      100.00
+------------+-----------------------------------
+      Total |        269      100.00
+
+. 
+. egen mean_officers = mean(po_grandtotal)
+
+. egen median_officers = median(po_grandtotal)
+
+. gen above_median_officers=(po_grandtotal>=median_officers)
+
+. * We have on average 27.37 officers per station. The median is 24 officers. 
+. * We have 35 stations. 15 PS should fall above the median, 20 will fall below the median.
+. 
+. unique ps_dist_id if above_median_officers == 1
+Number of unique values of ps_dist_id is  10
+Number of records is  143
+
+. unique ps_dist_id if above_median_officers == 0 
+Number of unique values of ps_dist_id is  25
+Number of records is  126
+
+. //We have 10 PS with above median number of Police Officers and 25 PS with above median Police Office
+> rs strength. 
+. 
+. save "${intermediate_dta}1003_bhojpur-merged_prep.dta", replace
+(file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\bhojpur-randomization\02.intermediate-data\1003_bho
+    > jpur-merged_prep.dta not found)
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\bhojpur-randomization\02.intermediate-data\1003_bho
+    > jpur-merged_prep.dta saved
+
+. 
+. collapse (mean) above_median_officers, by ( ps_dist_id)
+
+. rename  above_median_officers strata
+
+. 
+. 
+. *2. Randomization of stations
+. set seed 68200923
+
+. gen random = uniform()
+
+. egen ordem = rank(random), by (strata) unique 
+
+. egen n_obs = count(random), by (strata)
+
+. gen cutoff = n_obs*(1/2)
+
+. gen cutoffA = round(cutoff)
+
+. gen T = (ordem<= cutoffA)
+
+. 
+. save "${intermediate_dta}randomization_bhojpur.dta", replace
+(file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\bhojpur-randomization\02.intermediate-data\randomiz
+    > ation_bhojpur.dta not found)
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\bhojpur-randomization\02.intermediate-data\randomiz
+    > ation_bhojpur.dta saved
+
+. 
+. tab T strata
+
+           |        (mean)
+           | above_median_officers
+         T |         0          1 |     Total
+-----------+----------------------+----------
+         0 |        12          5 |        17 
+         1 |        13          5 |        18 
+-----------+----------------------+----------
+     Total |        25         10 |        35 
+
+. 
+end of do-file
+
+. exit, clear

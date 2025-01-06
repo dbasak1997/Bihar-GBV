@@ -1,0 +1,13 @@
+		(1)	(2)
+VARIABLES	LABELS	ps_phone	ps_electricity
+			
+o.T	T = o,	-	-
+			
+			
+Observations		269	269
+Mean of control		1.000	1.000
+Mean of treatment		1.000	1.000
+Strata FE		Yes	Yes
+Cluster Station		Yes	Yes
+Robust standard errors in parentheses			
+*** p<0.01, ** p<0.05, * p<0.1			

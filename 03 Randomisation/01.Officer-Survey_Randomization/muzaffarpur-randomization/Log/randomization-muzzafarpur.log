@@ -1,0 +1,206 @@
+-------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03 Randomisati
+> on\01.Officer-Survey_Randomization\muzaffarpur-randomization\Log\randomization-muzzafarpur.log
+  log type:  text
+ opened on:  26 Jun 2024, 17:34:14
+
+. 
+. * We will add this line from time to time if the program takes time to compute or uses a lot of loops
+. noisily display as text "The date is " as result "--$S_DATE--" as text " and the time is " as result 
+> "--$S_TIME--"
+The date is --26 Jun 2024-- and the time is --17:34:14--
+
+. 
+. 
+. 
+. **Preparing the Dataset 
+. 
+. //we use the merge file shared over gmail (updated in DB)
+. 
+. use "$source\1006_muzaffarpur-merged", clear
+
+. 
+. 
+. tab po_grandtotal, missing
+
+      Total |
+   Officers |
+Strength in |
+     the PS |
+    (Strata |
+  Variable) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          8 |          3        0.95        0.95
+          9 |          5        1.58        2.53
+         11 |          6        1.90        4.43
+         12 |          5        1.58        6.01
+         14 |          4        1.27        7.28
+         15 |         21        6.65       13.92
+         16 |         11        3.48       17.41
+         17 |         10        3.16       20.57
+         18 |          6        1.90       22.47
+         19 |          6        1.90       24.37
+         20 |         20        6.33       30.70
+         21 |         16        5.06       35.76
+         23 |         14        4.43       40.19
+         24 |          8        2.53       42.72
+         25 |         12        3.80       46.52
+         28 |          7        2.22       48.73
+         29 |          6        1.90       50.63
+         34 |          7        2.22       52.85
+         38 |          9        2.85       55.70
+         40 |         48       15.19       70.89
+         47 |         20        6.33       77.22
+         52 |         34       10.76       87.97
+         54 |          7        2.22       90.19
+         56 |         11        3.48       93.67
+         68 |         20        6.33      100.00
+------------+-----------------------------------
+      Total |        316      100.00
+
+. 
+. 
+. egen median_officers=median(po_grandtotal)
+
+. gen above_median_officers=(po_grandtotal>=median_officers)
+
+. 
+. tab above_median_officers
+
+above_media |
+ n_officers |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |        154       48.73       48.73
+          1 |        162       51.27      100.00
+------------+-----------------------------------
+      Total |        316      100.00
+
+. 
+. /*
+> 
+> tab above_median_officers
+> 
+> above_media |
+>  n_officers |      Freq.     Percent        Cum.
+> ------------+-----------------------------------
+>           0 |        154       48.73       48.73
+>           1 |        162       51.27      100.00
+> ------------+-----------------------------------
+>       Total |        316      100.00
+> 
+> */
+. 
+. 
+. sum po_grandtotal, d //Describes our Strata Variable in details
+
+          Total Officers Strength in the PS (Strata
+                          Variable)
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            9              8
+ 5%           12              8
+10%           15              8       Obs                 316
+25%           20              9       Sum of wgt.         316
+
+50%           29                      Mean           33.59494
+                        Largest       Std. dev.      16.63999
+75%           47             68
+90%           54             68       Variance       276.8894
+95%           68             68       Skewness       .4137016
+99%           68             68       Kurtosis       2.050092
+
+. 
+. 
+. /*
+> 
+>  Total Officers Strength in the PS (Strata
+>                           Variable)
+> -------------------------------------------------------------
+>       Percentiles      Smallest
+>  1%            9              8
+>  5%           12              8
+> 10%           15              8       Obs                 316
+> 25%           20              9       Sum of wgt.         316
+> 
+> 50%           29                      Mean           33.60127
+>                         Largest       Std. dev.      16.63328
+> 75%           47             68
+> 90%           54             68       Variance       276.6659
+> 95%           68             68       Skewness       .4143444
+> 99%           68             68       Kurtosis       2.050954
+> 
+> 
+> */
+. 
+. 
+. *We have on average 33.6 officers per station  median is 29 officers. 
+. 
+. unique ps_dist_id if above_median_officers==1
+Number of unique values of ps_dist_id is  13
+Number of records is  162
+
+. unique ps_dist_id if above_median_officers==0 
+Number of unique values of ps_dist_id is  25
+Number of records is  154
+
+. 
+. 
+. //We have 13 PS with above median number of Police Officers and 25 PS with below median Police Office
+> rs strength. 
+. 
+. 
+. save  "$dta\1006_muzaffarpur-merged_prep.dta", replace
+(file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\muzaffarpur-randomization\Data\1006_muzaffarpur-mer
+    > ged_prep.dta not found)
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\muzaffarpur-randomization\Data\1006_muzaffarpur-mer
+    > ged_prep.dta saved
+
+. 
+. collapse (mean) above_median_officers, by ( ps_dist_id)
+
+. rename  above_median_officers strata
+
+. 
+. 
+. *2. Randomization of stations
+. set seed 68200923
+
+. gen random = uniform()
+
+. egen ordem = rank(random), by (strata) unique 
+
+. egen n_obs = count(random), by (strata)
+
+. gen cutoff = n_obs*(1/2)
+
+. gen cutoffA = round(cutoff)
+
+. gen T = (ordem<= cutoffA)
+
+. save "$dta\randomization_muzaffarpur.dta", replace
+(file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\muzaffarpur-randomization\Data\randomization_muzaff
+    > arpur.dta not found)
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\muzaffarpur-randomization\Data\randomization_muzaff
+    > arpur.dta saved
+
+. 
+. tab T strata
+
+           |        (mean)
+           | above_median_officers
+         T |         0          1 |     Total
+-----------+----------------------+----------
+         0 |        12          6 |        18 
+         1 |        13          7 |        20 
+-----------+----------------------+----------
+     Total |        25         13 |        38 
+
+. 
+end of do-file
+
+. exit, clear

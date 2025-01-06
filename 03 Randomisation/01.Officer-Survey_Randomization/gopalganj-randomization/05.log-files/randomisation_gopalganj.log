@@ -1,0 +1,119 @@
+-------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03 Randomisati
+> on\01.Officer-Survey_Randomization\gopalganj-randomization\05.log-files\randomisation_gopalganj.log
+  log type:  text
+ opened on:  26 Jun 2024, 17:32:36
+
+. 
+. * We will add this line from time to time if the program takes time to compute or uses a lot of loops
+. noisily display as text "The date is " as result "--$S_DATE--" as text " and the time is " as result 
+> "--$S_TIME
+The date is --26 Jun 2024-- and the time is --17:32:36
+
+. 
+. 
+. **Preparing the Dataset 
+. 
+. * Loading the merged baseline for Gopalganj
+. use "$source\1004_gopalganj-merged.dta"
+
+. 
+. tab po_grandtotal, missing // No missing values
+
+      Total |
+   Officers |
+Strength in |
+     the PS |
+    (Strata |
+  Variable) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          9 |          9        4.71        4.71
+         10 |          5        2.62        7.33
+         11 |          6        3.14       10.47
+         12 |          5        2.62       13.09
+         13 |         12        6.28       19.37
+         14 |          6        3.14       22.51
+         15 |         24       12.57       35.08
+         16 |          8        4.19       39.27
+         18 |         17        8.90       48.17
+         19 |         35       18.32       66.49
+         21 |          9        4.71       71.20
+         22 |          7        3.66       74.87
+         24 |         13        6.81       81.68
+         27 |          7        3.66       85.34
+         31 |          8        4.19       89.53
+         32 |         20       10.47      100.00
+------------+-----------------------------------
+      Total |        191      100.00
+
+. 
+. egen mean_officers = mean(po_grandtotal)
+
+. egen median_officers = median(po_grandtotal)
+
+. gen above_median_officers=(po_grandtotal>=median_officers)
+
+. * We have on average 19.33 officers per station. The median is 19 officers. 
+. * We have 20 stations. 10 PS should fall above the median, 10 should fall below the median.
+. 
+. unique ps_dist_id if above_median_officers == 1
+Number of unique values of ps_dist_id is  9
+Number of records is  99
+
+. unique ps_dist_id if above_median_officers == 0 
+Number of unique values of ps_dist_id is  11
+Number of records is  92
+
+. //We have 9 PS with above median number of Police Officers and 11 PS with below median Police Officer
+> s strength. 
+. 
+. save "${intermediate_dta}1004_gopalganj-merged_prep.dta", replace
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\gopalganj-randomization\02.intermediate-data\1004_g
+    > opalganj-merged_prep.dta saved
+
+. 
+. collapse (mean) above_median_officers, by ( ps_dist_id)
+
+. rename  above_median_officers strata
+
+. 
+. 
+. *2. Randomization of stations
+. set seed 68200923
+
+. gen random = uniform()
+
+. egen ordem = rank(random), by (strata) unique 
+
+. egen n_obs = count(random), by (strata)
+
+. gen cutoff = n_obs*(1/2)
+
+. gen cutoffA = round(cutoff)
+
+. gen T = (ordem<= cutoffA)
+
+. 
+. save "${intermediate_dta}randomization_gopalganj.dta", replace
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\gopalganj-randomization\02.intermediate-data\random
+    > ization_gopalganj.dta saved
+
+. 
+. tab T strata
+
+           |        (mean)
+           | above_median_officers
+         T |         0          1 |     Total
+-----------+----------------------+----------
+         0 |         5          4 |         9 
+         1 |         6          5 |        11 
+-----------+----------------------+----------
+     Total |        11          9 |        20 
+
+. 
+end of do-file
+
+. exit, clear

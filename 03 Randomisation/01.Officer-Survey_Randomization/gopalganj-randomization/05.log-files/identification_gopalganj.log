@@ -1,0 +1,168 @@
+----------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\AG\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_R
+> andomization\gopalganj-randomization\05.log-files\identification_gopalganj.log
+  log type:  text
+ opened on:   6 Feb 2023, 20:43:48
+
+. 
+. * We will add this line from time to time if the program takes time to compute or uses a lot of loops
+. 
+. noisily display as text "The date is " as result "--$S_DATE--" as text " and the time is " as result "--$S_TIME--"
+The date is -- 6 Feb 2023-- and the time is --20:43:48--
+
+. 
+. 
+. * Importing the input dta file
+. 
+. import excel "${clean_dta}treatment-stations_gopalganj.xls", sheet("Sheet1") firstrow
+(4 vars, 191 obs)
+
+. 
+. save "${clean_dta}treatment-stations_gopalganj.dta", replace
+file C:\Users\AG\Dropbox\Debiasing Police in
+    India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomization\gopalganj-randomization\06.clean-d
+    > ata\treatment-stations_gopalganj.dta saved
+
+. 
+. 
+. * Merging the treatment list of police stations to PII baseline data to identify officers for training by station and dete
+> rmine their PII
+. clear 
+
+. 
+. use "$baseline\01.officersurvey_clean_PII.dta", clear 
+
+. 
+. * From the clean baseline PII, selecting Gopalganj district
+. keep if ps_dist == 1004
+(2,602 observations deleted)
+
+. 
+. merge m:m ps_dist_id ps_name using "${clean_dta}treatment-stations_gopalganj.dta", force // All observations match
+(note: variable ps_confirm was str3 in the using data, but will be byte now)
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                               193  (_merge==3)
+    -----------------------------------------
+
+. 
+. 
+. * Some basic checks
+. tab T, missing // No missing values
+
+          T |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |         85       44.04       44.04
+          1 |        108       55.96      100.00
+------------+-----------------------------------
+      Total |        193      100.00
+
+. 
+. tab ps_dist_id, missing // No missing values
+
+     Police |
+ Station ID |
+     in the |
+   District |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    1004_10 |         11        5.70        5.70
+    1004_11 |         12        6.22       11.92
+    1004_12 |         12        6.22       18.13
+    1004_13 |          6        3.11       21.24
+    1004_14 |         19        9.84       31.09
+    1004_15 |          9        4.66       35.75
+    1004_16 |          8        4.15       39.90
+    1004_17 |         12        6.22       46.11
+    1004_18 |         17        8.81       54.92
+    1004_19 |          5        2.59       57.51
+    1004_21 |          9        4.66       62.18
+    1004_22 |         10        5.18       67.36
+    1004_23 |         11        5.70       73.06
+    1004_24 |          5        2.59       75.65
+    1004_26 |          7        3.63       79.27
+    1004_27 |          6        3.11       82.38
+    1004_28 |          7        3.63       86.01
+    1004_29 |         13        6.74       92.75
+    1004_30 |          8        4.15       96.89
+    1004_31 |          6        3.11      100.00
+------------+-----------------------------------
+      Total |        193      100.00
+
+. 
+. tab ps_name, missing // No missing values
+
+     Name of the Police |
+                Station |      Freq.     Percent        Cum.
+------------------------+-----------------------------------
+         Baikunthpur PS |         11        5.70        5.70
+             Barauli PS |         12        6.22       11.92
+               Bhore PS |         12        6.22       18.13
+      Bishwambharpur PS |          6        3.11       21.24
+           Gopalganj PS |         19        9.84       31.09
+            Gopalpur PS |          9        4.66       35.75
+              Hathua PS |          8        4.15       39.90
+             Kataiya PS |         12        6.22       46.11
+           Kuchaikot PS |         17        8.81       54.92
+            Madhopur OP |          5        2.59       57.51
+          Manjhagarh PS |          9        4.66       62.18
+             Mirganj PS |         10        5.18       67.36
+         Mohammadpur PS |         11        5.70       73.06
+           Phulwaria PS |          5        2.59       75.65
+           Sidhwalia PS |          7        3.63       79.27
+           Sri Pur O. P |          6        3.11       82.38
+               Thawe PS |          7        3.63       86.01
+          Uchakagaon PS |         13        6.74       92.75
+            Vijaypur PS |          8        4.15       96.89
+             Yadopur PS |          6        3.11      100.00
+------------------------+-----------------------------------
+                  Total |        193      100.00
+
+. 
+. 
+. * FOR TREATMENT
+. * Saving the dataset that identifies officers to be trained in Patna
+. 
+. save "${po_list}1004_gopalganj-training.dta", replace
+(file C:\Users\AG\Dropbox\Debiasing Police in
+    India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomization\gopalganj-randomization\07.po-list
+    > \1004_gopalganj-training.dta not found)
+file C:\Users\AG\Dropbox\Debiasing Police in
+    India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomization\gopalganj-randomization\07.po-list
+    > \1004_gopalganj-training.dta saved
+
+. 
+. keep if T == 1
+(85 observations deleted)
+
+. 
+. export delimited gbv_uid ps_dist ps_series ps_dist_id ps_name po_name po_rank po_mobnum po_mobnum_alt T using "C:\Users\AG
+> \Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomization\gopalganj
+> -randomization\07.po-list\1004_gopalganj-treatment.csv", replace
+(file C:\Users\AG\Dropbox\Debiasing Police in
+    India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomization\gopalganj-randomization\07.po-list
+    > \1004_gopalganj-treatment.csv not found)
+file C:\Users\AG\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomiza
+> tion\gopalganj-randomization\07.po-list\1004_gopalganj-treatment.csv saved
+
+. */
+. 
+. 
+. /* FOR CONTROL
+> * Saving the dataset that identifies officers to be trained in Patna
+> 
+> save "${po_list}1004_gopalganj-control.dta", replace
+> 
+> keep if T == 0
+> 
+> export delimited gbv_uid ps_dist ps_series ps_dist_id ps_name po_name po_rank po_mobnum po_mobnum_alt T using "C:\Users\AG
+> \Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomization\gopalganj
+> -randomization\07.po-list\1004_gopalganj-control.csv", replace
+> 
+> */
+. 
+end of do-file
+
+. exit, clear

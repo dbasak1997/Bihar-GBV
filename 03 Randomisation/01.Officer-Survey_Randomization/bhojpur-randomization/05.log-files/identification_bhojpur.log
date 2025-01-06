@@ -1,0 +1,189 @@
+----------------------------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\AG\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_R
+> andomization\bhojpur-randomization\05.log-files\identification_bhojpur.log
+  log type:  text
+ opened on:   2 Feb 2023, 21:25:11
+
+. 
+. * We will add this line from time to time if the program takes time to compute or uses a lot of loops
+. 
+. noisily display as text "The date is " as result "--$S_DATE--" as text " and the time is " as result "--$S_TIME--"
+The date is -- 2 Feb 2023-- and the time is --21:25:11--
+
+. 
+. 
+. * Importing the input dta file
+. 
+. import excel "${clean_dta}treatment-stations_bhojpur.xls", sheet("Sheet1") firstrow
+(4 vars, 269 obs)
+
+. 
+. save "${clean_dta}treatment-stations_bhojpur.dta", replace
+file C:\Users\AG\Dropbox\Debiasing Police in
+    India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomization\bhojpur-randomization\06.clean-dat
+    > a\treatment-stations_bhojpur.dta saved
+
+. 
+. 
+. * Merging the treatment list of police stations to PII baseline data to identify officers for training by station and dete
+> rmine their PII
+. clear 
+
+. 
+. use "$baseline\01.officersurvey_clean_PII.dta", clear 
+
+. 
+. * From the clean baseline PII, selecting Bhojpur district
+. keep if ps_dist == 1003
+(2,525 observations deleted)
+
+. 
+. merge m:m ps_dist_id ps_name using "${clean_dta}treatment-stations_bhojpur.dta", force // All observations match
+(note: variable ps_confirm was str3 in the using data, but will be byte now)
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                               269  (_merge==3)
+    -----------------------------------------
+
+. 
+. 
+. * Some basic checks
+. tab T, missing // No missing values
+
+          T |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |        121       44.98       44.98
+          1 |        148       55.02      100.00
+------------+-----------------------------------
+      Total |        269      100.00
+
+. 
+. tab ps_dist_id, missing // No missing values
+
+     Police |
+ Station ID |
+     in the |
+   District |      Freq.     Percent        Cum.
+------------+-----------------------------------
+    1003_10 |          4        1.49        1.49
+    1003_11 |          4        1.49        2.97
+    1003_12 |          3        1.12        4.09
+    1003_13 |          3        1.12        5.20
+    1003_14 |         11        4.09        9.29
+    1003_15 |          9        3.35       12.64
+    1003_17 |          6        2.23       14.87
+    1003_18 |         10        3.72       18.59
+    1003_19 |          6        2.23       20.82
+    1003_20 |          4        1.49       22.30
+    1003_21 |          3        1.12       23.42
+    1003_22 |          4        1.49       24.91
+    1003_23 |          7        2.60       27.51
+    1003_25 |          4        1.49       29.00
+    1003_26 |          6        2.23       31.23
+    1003_27 |         14        5.20       36.43
+    1003_28 |          4        1.49       37.92
+    1003_29 |          3        1.12       39.03
+    1003_31 |         15        5.58       44.61
+    1003_32 |          7        2.60       47.21
+    1003_35 |         11        4.09       51.30
+    1003_36 |          4        1.49       52.79
+    1003_37 |         22        8.18       60.97
+    1003_38 |          4        1.49       62.45
+    1003_40 |         19        7.06       69.52
+    1003_42 |          9        3.35       72.86
+    1003_43 |         10        3.72       76.58
+    1003_44 |          8        2.97       79.55
+    1003_45 |          4        1.49       81.04
+    1003_46 |          3        1.12       82.16
+    1003_47 |          5        1.86       84.01
+    1003_48 |          4        1.49       85.50
+    1003_49 |         21        7.81       93.31
+    1003_51 |         12        4.46       97.77
+    1003_53 |          6        2.23      100.00
+------------+-----------------------------------
+      Total |        269      100.00
+
+. 
+. tab ps_name, missing // No missing values
+
+     Name of the Police |
+                Station |      Freq.     Percent        Cum.
+------------------------+-----------------------------------
+      Agiaon  Bazar  PS |          4        1.49        1.49
+                Ayar PS |          4        1.49        2.97
+          Azimabad   PS |          3        1.12        4.09
+          Bahoranpur PS |          3        1.12        5.20
+            Barhara  PS |         11        4.09        9.29
+               Bihia PS |          9        3.35       12.64
+              Chandi PS |          6        2.23       14.87
+        Charpokhari  PS |         10        3.72       18.59
+              Chauri PS |          6        2.23       20.82
+             Dhangai PS |          4        1.49       22.30
+           Dhobaha O. P |          3        1.12       23.42
+        Gajrajganj O. P |          4        1.49       24.91
+             Garhani PS |          7        2.60       27.51
+             Gidha O.P. |          6        2.23       29.74
+     Hassan Bazar  O. P |          4        1.49       31.23
+             Imadpur PS |          6        2.23       33.46
+          Jagdishpur PS |         14        5.20       38.66
+          Karnamepur PS |          4        1.49       40.15
+           Khawaspur OP |          3        1.12       41.26
+            Koilwar  PS |         15        5.58       46.84
+         Krishnagarh PS |          7        2.60       49.44
+          Muffassil  PS |         11        4.09       53.53
+           Narainpur PS |          4        1.49       55.02
+              Nawada PS |         22        8.18       63.20
+              Pawana PS |          4        1.49       64.68
+                Piro PS |         19        7.06       71.75
+               Sahar PS |          9        3.35       75.09
+            Sandesh  PS |         10        3.72       78.81
+             Shahpur PS |          8        2.97       81.78
+         Sikarhatta  PS |          4        1.49       83.27
+               Sinha PS |          3        1.12       84.39
+              Tarari PS |          5        1.86       86.25
+               Tiyar PS |          4        1.49       87.73
+               Town  PS |         21        7.81       95.54
+       Udwant  Nagar PS |         12        4.46      100.00
+------------------------+-----------------------------------
+                  Total |        269      100.00
+
+. 
+. 
+. /* FOR TREATMENT
+> * Saving the dataset that identifies officers to be trained in Patna
+> 
+> save "${po_list}1003_bhojpur-training.dta", replace
+> 
+> keep if T == 1
+> 
+> export excel gbv_uid ps_dist ps_series ps_dist_id ps_name po_name po_rank po_mobnum po_mobnum_alt T using "${po_list}1003_
+> bhojpur-treatment.xls", firstrow(variables)
+> */
+. 
+. 
+. * FOR CONTROL
+. * Saving the dataset that identifies officers to be trained in Patna
+. 
+. save "${po_list}1003_bhojpur-control.dta", replace
+file C:\Users\AG\Dropbox\Debiasing Police in
+    India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomization\bhojpur-randomization\07.po-list\1
+    > 003_bhojpur-control.dta saved
+
+. 
+. keep if T == 0
+(148 observations deleted)
+
+. 
+. export excel gbv_uid ps_dist ps_series ps_dist_id ps_name po_name po_rank po_mobnum po_mobnum_alt T using "${po_list}1003_
+> bhojpur-control.xls", firstrow(variables)
+file C:\Users\AG\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\Randomization-2022\01.Officer-Survey_Randomiza
+> tion\bhojpur-randomization\07.po-list\1003_bhojpur-control.xls saved
+
+. */
+. 
+end of do-file
+
+. exit, clear

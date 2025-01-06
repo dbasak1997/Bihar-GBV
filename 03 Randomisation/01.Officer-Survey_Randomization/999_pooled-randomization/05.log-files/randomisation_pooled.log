@@ -1,0 +1,206 @@
+------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-
+> 2022\03 Randomisation\01.Officer-Survey_Randomization\999_pooled-randomization\05.
+> log-files\randomisation_pooled.log
+  log type:  text
+ opened on:  22 Nov 2024, 18:55:23
+
+. 
+. * We will add this line from time to time if the program takes time to compute or 
+> uses a lot of loops
+. noisily display as text "The date is " as result "--$S_DATE--" as text " and the t
+> ime is " as result "--$S_TIME
+The date is --22 Nov 2024-- and the time is --18:55:23
+
+. 
+. import excel "${raw}\PS_Popdensity.xlsx", sheet("Sheet1") firstrow
+(6 vars, 419 obs)
+
+. drop ps_dist ps_name
+
+. tempfile ps_density
+
+. save `ps_density' 
+file C:\Users\dibbo\AppData\Local\Temp\ST_3c94_000001.tmp saved as .dta format
+
+. 
+. clear
+
+. 
+. **Preparing the Dataset 
+. 
+. use "$source\bagaha-randomization\02.intermediate-data\randomization_bagaha.dta", 
+> clear 
+
+. append using "$source\bettiah-randomization\02.intermediate-data\randomization_bet
+> tiah.dta"
+
+. append using "$source\bhojpur-randomization\02.intermediate-data\randomization_bho
+> jpur.dta"
+
+. gen tag_dum = 0
+
+. replace tag_dum = 1 if ps_dist_id == "1003_53"
+(1 real change made)
+
+. append using "$source\gopalganj-randomization\02.intermediate-data\randomization_g
+> opalganj.dta"
+
+. append using "$source\motihari-randomization\02.intermediate-data\randomization_mo
+> tihari.dta"
+
+. replace ps_dist_id = "1005_53" if ps_dist_id == "1003_53" & tag_dum !=1
+(0 real changes made)
+
+. drop tag_dum
+
+. append using "$source\muzaffarpur-randomization\Data\randomization_muzaffarpur.dta
+> "
+
+. append using "$source\nalanda-randomization\02.intermediate-data\randomization_nal
+> anda.dta"
+
+. append using "$source\patna-randomization\02.intermediate-data\randomization_patna
+> .dta"
+
+. append using "$source\saran-randomization\02.intermediate-data\randomization_saran
+> .dta"
+
+. append using "$source\sitamarhi-randomization\02.intermediate-data\randomization_s
+> itamarhi.dta"
+
+. append using "$source\siwan-randomization\02.intermediate-data\randomization_siwan
+> .dta"
+
+. append using "$source\vaishali-randomization\02.intermediate-data\randomization_va
+> ishali.dta"
+
+. rename T treatment
+
+. 
+. merge 1:1 ps_dist_id using `ps_density' 
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                               419  (_merge==3)
+    -----------------------------------------
+
+. drop if _m != 3
+(0 observations deleted)
+
+. drop random ordem n_obs cutoff cutoffA _merge ps_lat ps_long
+
+. gen ruralurban_dum = 0
+
+. replace ruralurban_dum = 1 if popdensity > 2000 // setting dum = 1 if average popu
+> lation density/sqkm of a radius of 10sqkm around the PS is greater than 2000
+(140 real changes made)
+
+. label define ruralurban_dum 0 "Rural" 1"Urban"
+
+. label values ruralurban_dum ruralurban_dum
+
+. label variable ruralurban_dum "Rural/Urban (0=Rural,1=Urban)"
+
+. 
+. save "${clean_dta}pooled_randomisation.dta", replace
+file C:\Users\dibbo\Dropbox\Debiasing Police in
+    India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\999_pooled-randomization\06.clea
+    > n-data\pooled_randomisation.dta saved
+
+. 
+end of do-file
+
+. do "C:\Users\dibbo\AppData\Local\Temp\STD3c94_000001.tmp"
+
+. /*==============================================================================
+> File Name: Reflection Survey 2022 - Tables do File
+> Project: Debiasing Police Officers in Bihar
+> Authors: Amaral, Borker, Prakash, Sviatschi
+> Created on:     22/02/2023
+> Created by: Aadya Gupta
+> Updated on:     22/11/2024
+> Updated by:     Dibyajyoti Basak
+> 
+> *Notes READ ME:
+> *This is the Tables Do file for tables of Reflection Survey
+> 
+> *       Inputs:  06.clean-data "01.reflectionsurvey_clean"
+> *       Outputs:  
+> ==============================================================================*/
+. 
+. //SET-UP: Basic Definitions
+. 
+. 
+. /*CLEAR*/
+. 
+. drop _all       /*all variables and obs are dropped*/
+
+. label drop _all /*all defined labels are dropped*/
+
+. clear           /*drop _all + label drop _all*/ 
+
+. clear mata      /*Mata is a matrix programming language that can be used by those 
+> who want to perform matrix calculations interactively and by those who want to add
+>  new features to Stata.*/
+
+. clear matrix    /*clear all matrices*/
+
+. 
+. clear all /*or "clear *". Remove all data, value labels, matrices
+>     scalars, constraints, clusters, stored results, sersets, and Mata functions an
+> d objects
+>     from memory.  They also close all open files and postfiles, clear the class sy
+> stem,
+>     close any open Graph windows and dialog boxes, drop all programs from memory, 
+> and reset
+>     all timers to zero.*/
+
+. 
+. /*SETTINGS*/
+. set more off     /*avoids that stata stops*/ 
+
+. set memory 300m  /*sets memory size*/
+set memory ignored.
+    Memory no longer needs to be set in modern Statas; memory adjustments are
+    performed on the fly automatically.
+
+. set matsize 1000 /*sets the maximum number of variables in a model*/
+set matsize ignored.
+    Matrix sizes are no longer limited by c(matsize) in modern Statas.  Matrix
+    sizes are now limited by edition of Stata.  See limits for more details.
+
+. set maxvar 32767 /*maximum number of variables in your dataset*/
+
+
+. set seed 12435   /*initial value of a random number*/
+
+.         
+. *File Path
+. 
+.     global raw "$reflection\00.raw-data"
+
+.         global do_files "$reflection\01.do-files"
+
+.         global intermediate_dta "$reflection\02.intermediate-data\"
+
+.         global tables "$reflection\03.tables\"
+
+.         global graphs "$reflection\04.graphs\"
+
+.         global log_files "$reflection\05.log-files\"
+
+.         global clean_dta "$reflection\06.clean-data\"
+
+. 
+. 
+. /* Install packages:
+> ssc install estout
+> */
+. 
+. 
+. * We will log in
+. capture log close 

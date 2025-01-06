@@ -1,0 +1,130 @@
+-------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03 Randomisati
+> on\01.Officer-Survey_Randomization\bettiah-randomization\05.log-files\randomisation_bettiah.log
+  log type:  text
+ opened on:  26 Jun 2024, 17:28:39
+
+. 
+. * We will add this line from time to time if the program takes time to compute or uses a lot of loops
+. noisily display as text "The date is " as result "--$S_DATE--" as text " and the time is " as result 
+> "--$S_TIME
+The date is --26 Jun 2024-- and the time is --17:28:39
+
+. 
+. 
+. **Preparing the Dataset 
+. 
+. * Loading the merged baseline for Bettiah
+. use "$source\1002_bettiah-merged.dta"
+
+. 
+. tab po_grandtotal, missing // No missing values
+
+      Total |
+   Officers |
+Strength in |
+     the PS |
+    (Strata |
+  Variable) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          6 |          6        2.42        2.42
+          7 |          9        3.63        6.05
+          8 |          7        2.82        8.87
+          9 |          9        3.63       12.50
+         11 |         13        5.24       17.74
+         12 |          4        1.61       19.35
+         14 |          5        2.02       21.37
+         15 |         16        6.45       27.82
+         16 |          7        2.82       30.65
+         17 |          9        3.63       34.27
+         19 |         23        9.27       43.55
+         20 |         14        5.65       49.19
+         21 |         20        8.06       57.26
+         22 |          5        2.02       59.27
+         25 |         12        4.84       64.11
+         27 |          5        2.02       66.13
+         31 |         13        5.24       71.37
+         33 |         16        6.45       77.82
+         36 |         24        9.68       87.50
+         37 |         20        8.06       95.56
+         38 |         11        4.44      100.00
+------------+-----------------------------------
+      Total |        248      100.00
+
+. 
+. egen mean_officers = mean(po_grandtotal)
+
+. egen median_officers = median(po_grandtotal)
+
+. gen above_median_officers=(po_grandtotal>=median_officers)
+
+. * We have on average 22.73 officers per station. The median is 21 officers. 
+. * We have 32 stations. 16 PS should fall above the median, 16 should fall below the median.
+. 
+. unique ps_dist_id if above_median_officers == 1
+Number of unique values of ps_dist_id is  12
+Number of records is  126
+
+. unique ps_dist_id if above_median_officers == 0 
+Number of unique values of ps_dist_id is  20
+Number of records is  122
+
+. //We have 12 PS with above median number of Police Officers and 20 PS with below median Police Office
+> rs strength. 
+. 
+. save "${intermediate_dta}1002_bettiah-merged_prep.dta", replace
+(file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\bettiah-randomization\02.intermediate-data\1002_bet
+    > tiah-merged_prep.dta not found)
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\bettiah-randomization\02.intermediate-data\1002_bet
+    > tiah-merged_prep.dta saved
+
+. 
+. collapse (mean) above_median_officers, by ( ps_dist_id)
+
+. rename  above_median_officers strata
+
+. 
+. 
+. *2. Randomization of stations
+. set seed 68200923
+
+. gen random = uniform()
+
+. egen ordem = rank(random), by (strata) unique 
+
+. egen n_obs = count(random), by (strata)
+
+. gen cutoff = n_obs*(1/2)
+
+. gen cutoffA = round(cutoff)
+
+. gen T = (ordem<= cutoffA)
+
+. 
+. save "${intermediate_dta}randomization_bettiah.dta", replace
+(file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\bettiah-randomization\02.intermediate-data\randomiz
+    > ation_bettiah.dta not found)
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\bettiah-randomization\02.intermediate-data\randomiz
+    > ation_bettiah.dta saved
+
+. 
+. tab T strata
+
+           |        (mean)
+           | above_median_officers
+         T |         0          1 |     Total
+-----------+----------------------+----------
+         0 |        10          6 |        16 
+         1 |        10          6 |        16 
+-----------+----------------------+----------
+     Total |        20         12 |        32 
+
+. 
+end of do-file
+
+. exit, clear

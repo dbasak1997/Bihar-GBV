@@ -1,0 +1,128 @@
+-------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03 Randomisati
+> on\01.Officer-Survey_Randomization\nalanda-randomization\05.log-files\randomisation_nalanda.log
+  log type:  text
+ opened on:  26 Jun 2024, 18:23:07
+
+. 
+. * We will add this line from time to time if the program takes time to compute or uses a lot of loops
+. noisily display as text "The date is " as result "--$S_DATE--" as text " and the time is " as result 
+> "--$S_TIME
+The date is --26 Jun 2024-- and the time is --18:23:07
+
+. 
+. 
+. **Preparing the Dataset 
+. 
+. * Loading the merged baseline for Nalanda
+. use "$source\1007_nalanda-merged.dta"
+
+. 
+. tab po_grandtotal, missing // No missing values
+
+      Total |
+   Officers |
+Strength in |
+     the PS |
+    (Strata |
+  Variable) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          2 |         21        6.54        6.54
+          7 |          3        0.93        7.48
+          8 |          3        0.93        8.41
+          9 |          6        1.87       10.28
+         13 |          6        1.87       12.15
+         14 |          4        1.25       13.40
+         15 |          7        2.18       15.58
+         16 |          7        2.18       17.76
+         18 |         12        3.74       21.50
+         19 |          3        0.93       22.43
+         20 |         22        6.85       29.28
+         21 |         18        5.61       34.89
+         22 |         14        4.36       39.25
+         25 |          7        2.18       41.43
+         27 |         14        4.36       45.79
+         28 |         26        8.10       53.89
+         29 |         12        3.74       57.63
+         31 |         25        7.79       65.42
+         32 |          8        2.49       67.91
+         33 |         13        4.05       71.96
+         34 |         11        3.43       75.39
+         35 |         13        4.05       79.44
+         40 |         15        4.67       84.11
+         54 |          8        2.49       86.60
+         65 |         17        5.30       91.90
+         67 |         26        8.10      100.00
+------------+-----------------------------------
+      Total |        321      100.00
+
+. 
+. egen mean_officers = mean(po_grandtotal)
+
+. egen median_officers = median(po_grandtotal)
+
+. gen above_median_officers=(po_grandtotal>=median_officers)
+
+. 
+. 
+. unique ps_dist_id if above_median_officers == 1
+Number of unique values of ps_dist_id is  15
+Number of records is  174
+
+. unique ps_dist_id if above_median_officers == 0 
+Number of unique values of ps_dist_id is  25
+Number of records is  147
+
+. //We have 15 PS with above median number of Police Officers and 25 PS with below median Police Office
+> rs strength. 
+. 
+. save "${intermediate_dta}1007_nalanda-merged_prep.dta", replace
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\nalanda-randomization\02.intermediate-data\1007_nal
+    > anda-merged_prep.dta saved
+
+. 
+. collapse (mean) above_median_officers, by ( ps_dist_id)
+
+. rename  above_median_officers strata
+
+. 
+. 
+. *2. Randomization of stations
+. set seed 68200923
+
+. gen random = uniform()
+
+. egen ordem = rank(random), by (strata) unique 
+
+. egen n_obs = count(random), by (strata)
+
+. gen cutoff = n_obs*(1/2)
+
+. gen cutoffA = round(cutoff)
+
+. gen T = (ordem<= cutoffA)
+
+. 
+. save "${intermediate_dta}randomization_nalanda.dta", replace
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\nalanda-randomization\02.intermediate-data\randomiz
+    > ation_nalanda.dta saved
+
+. 
+. tab T strata
+
+           |        (mean)
+           | above_median_officers
+         T |         0          1 |     Total
+-----------+----------------------+----------
+         0 |        12          7 |        19 
+         1 |        13          8 |        21 
+-----------+----------------------+----------
+     Total |        25         15 |        40 
+
+. 
+end of do-file
+
+. exit, clear

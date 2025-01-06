@@ -1,0 +1,129 @@
+-------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03 Randomisati
+> on\01.Officer-Survey_Randomization\motihari-randomization\05.log-files\randomisation_motihari.log
+  log type:  text
+ opened on:  26 Jun 2024, 17:57:03
+
+. 
+. * We will add this line from time to time if the program takes time to compute or uses a lot of loops
+. noisily display as text "The date is " as result "--$S_DATE--" as text " and the time is " as result 
+> "--$S_TIME
+The date is --26 Jun 2024-- and the time is --17:57:03
+
+. 
+. 
+. **Preparing the Dataset 
+. 
+. * Loading the merged baseline for Bhojpur
+. use "$source\1005_motihari-merged.dta"
+
+. 
+. tab po_grandtotal, missing // No missing values
+
+      Total |
+   Officers |
+Strength in |
+     the PS |
+    (Strata |
+  Variable) |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          4 |          3        0.98        0.98
+          7 |          6        1.97        2.95
+          8 |          3        0.98        3.93
+         11 |         11        3.61        7.54
+         12 |          7        2.30        9.84
+         14 |          3        0.98       10.82
+         15 |         11        3.61       14.43
+         16 |          8        2.62       17.05
+         17 |          5        1.64       18.69
+         18 |         12        3.93       22.62
+         19 |          7        2.30       24.92
+         20 |         13        4.26       29.18
+         21 |          9        2.95       32.13
+         23 |         14        4.59       36.72
+         24 |         14        4.59       41.31
+         25 |         23        7.54       48.85
+         26 |          5        1.64       50.49
+         28 |         24        7.87       58.36
+         29 |         32       10.49       68.85
+         30 |         17        5.57       74.43
+         31 |         10        3.28       77.70
+         33 |         19        6.23       83.93
+         35 |         14        4.59       88.52
+         37 |         16        5.25       93.77
+         39 |          8        2.62       96.39
+         41 |         11        3.61      100.00
+------------+-----------------------------------
+      Total |        305      100.00
+
+. 
+. egen mean_officers = mean(po_grandtotal)
+
+. egen median_officers = median(po_grandtotal)
+
+. gen above_median_officers=(po_grandtotal>=median_officers)
+
+. * We have on average 25 officers per station. The median is 25 officers. 
+. * We have 47 stations. 24 PS should fall above the median, 23 should fall below the median.
+. 
+. unique ps_dist_id if above_median_officers == 1
+Number of unique values of ps_dist_id is  20
+Number of records is  156
+
+. unique ps_dist_id if above_median_officers == 0 
+Number of unique values of ps_dist_id is  27
+Number of records is  149
+
+. //We have 21 PS with above median number of Police Officers and 26 PS with below median Police Office
+> rs strength. 
+. 
+. save "${intermediate_dta}1005_motihari-merged_prep.dta", replace
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\motihari-randomization\02.intermediate-data\1005_mo
+    > tihari-merged_prep.dta saved
+
+. 
+. collapse (mean) above_median_officers, by ( ps_dist_id)
+
+. rename  above_median_officers strata
+
+. 
+. 
+. *2. Randomization of stations
+. set seed 68200923
+
+. gen random = uniform()
+
+. egen ordem = rank(random), by (strata) unique 
+
+. egen n_obs = count(random), by (strata)
+
+. gen cutoff = n_obs*(1/2)
+
+. gen cutoffA = round(cutoff)
+
+. gen T = (ordem<= cutoffA)
+
+. 
+. save "${intermediate_dta}randomization_motihari.dta", replace
+file C:\Users\dibbo\Dropbox\Debiasing Police in India\005-Data-and-analysis-2022\03
+    Randomisation\01.Officer-Survey_Randomization\motihari-randomization\02.intermediate-data\randomi
+    > zation_motihari.dta saved
+
+. 
+. tab T strata
+
+           |        (mean)
+           | above_median_officers
+         T |         0          1 |     Total
+-----------+----------------------+----------
+         0 |        13         10 |        23 
+         1 |        14         10 |        24 
+-----------+----------------------+----------
+     Total |        27         20 |        47 
+
+. 
+end of do-file
+
+. exit, clear
